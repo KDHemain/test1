@@ -1,0 +1,46 @@
+services:
+  mysql:
+    container_name: mysql-server
+    build:
+        context: ./
+        dockerfile: Dockerfile-DB
+    ports:
+      - 3306:3306
+    # volumes:
+    #   - mysql-data:/var/lib/mysql
+    networks:
+      - net1
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: app
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=$MYSQL_ROOT_PASSWORD']
+      interval: 30s
+      timeout: 1m
+      retries: 3
+      
+  spring:
+      container_name: spring-server
+      build:
+        context: ./
+        dockerfile: Dockerfile-SPRING
+      ports:
+        - 8080:8080  
+      # volumes:
+      #   - spring-data:/app/logs
+      networks:
+        - net1
+      environment:
+        MYSQL_HOST: mysql
+      depends_on:
+        - mysql
+
+networks:
+  net1:
+    driver: bridge
+  
+# volumes:
+#   mysql-data:
+#   spring-data:
