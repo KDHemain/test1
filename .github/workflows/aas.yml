@@ -2,7 +2,6 @@ name: App With Github Actions with Docker CI/CD
 
 on:
   workflow_dispatch:
-    
 
 jobs:
   ci:
@@ -54,11 +53,36 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     steps:
-    - name: Execute deployment script
+    - name: SSH to EC2 and prepare Docker Compose
       uses: appleboy/ssh-action@v1.2.0
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_PRIVATE_KEY }}
         script: |
+        
+          cd /home/ubuntu
+          
+          services:
+            mysql:
+              image: mysql:8.0
+              environment:
+                MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+                MYSQL_DATABASE: app
+              volumes:
+                - mysql-data:/var/lib/mysql
+            app:
+              image: ${{ secrets.DOCKERHUB_USERNAME }}/app-with-actions:latest
+              environment:
+                SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/appdb
+                SPRING_DATASOURCE_USERNAME: root
+                SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+              depends_on:
+                - mysql
+              ports:
+                - "8080:8080"
+          volumes:
+            mysql-data:
+              driver: local" > docker-compose.yml
+              
           sudo docker-compose up -d
