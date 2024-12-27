@@ -4,8 +4,8 @@ EXPOSE 8080
 
 WORKDIR /app
 
-VOLUME /app/logs
+ARG JAR_FILE=target/*.jar
 
-COPY app-0.0.1-SNAPSHOT app.jar /app/
+COPY ${JAR_FILE} app.jar
 
 ENTRYPOINT [ "java", "-jar", "/app.jar" ]
